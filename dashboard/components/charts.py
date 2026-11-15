@@ -1,6 +1,6 @@
 """
 VIGIL Analytics Charts Component
-Customized Plotly charts using the healthcare visual identity palette.
+Customized Plotly charts using the healthcare visual identity palette with high-contrast text.
 """
 import plotly.express as px
 import plotly.graph_objects as go
@@ -35,9 +35,18 @@ def plot_incident_distribution(by_type: Dict[str, int]):
         height=260,
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
-        font=dict(family="Inter, sans-serif", size=12, color="#263746"),
-        xaxis=dict(showgrid=True, gridcolor="#EDF2F7", dtick=1),
-        yaxis=dict(title="")
+        font=dict(family="Inter, sans-serif", size=12, color="#15324B"),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor="#EDF2F7",
+            dtick=1,
+            tickfont=dict(color="#15324B", size=12, family="Inter, sans-serif"),
+            title=dict(text="Count", font=dict(color="#15324B", size=12))
+        ),
+        yaxis=dict(
+            title="",
+            tickfont=dict(color="#15324B", size=12, family="Inter, sans-serif")
+        )
     )
     return fig
 
@@ -70,8 +79,15 @@ def plot_severity_breakdown(incidents: list):
         height=260,
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
-        font=dict(family="Inter, sans-serif", size=12, color="#263746"),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+        font=dict(family="Inter, sans-serif", size=12, color="#15324B"),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="center",
+            x=0.5,
+            font=dict(color="#15324B", size=12)
+        )
     )
     return fig
 
@@ -96,9 +112,19 @@ def plot_daily_trend(incidents: list):
         height=260,
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
-        font=dict(family="Inter, sans-serif", size=12, color="#263746"),
-        xaxis=dict(showgrid=True, gridcolor="#EDF2F7", title="Date"),
-        yaxis=dict(showgrid=True, gridcolor="#EDF2F7", title="Incident Count")
+        font=dict(family="Inter, sans-serif", size=12, color="#15324B"),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor="#EDF2F7",
+            title=dict(text="Date", font=dict(color="#15324B", size=12)),
+            tickfont=dict(color="#15324B", size=11)
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#EDF2F7",
+            title=dict(text="Incident Count", font=dict(color="#15324B", size=12)),
+            tickfont=dict(color="#15324B", size=11)
+        )
     )
     return fig
 
@@ -119,8 +145,15 @@ def plot_camera_distribution(by_camera: Dict[str, int]):
         height=260,
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
-        font=dict(family="Inter, sans-serif", size=12, color="#263746"),
-        xaxis=dict(title=""),
-        yaxis=dict(showgrid=True, gridcolor="#EDF2F7")
+        font=dict(family="Inter, sans-serif", size=12, color="#15324B"),
+        xaxis=dict(
+            title="",
+            tickfont=dict(color="#15324B", size=12)
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#EDF2F7",
+            tickfont=dict(color="#15324B", size=11)
+        )
     )
     return fig

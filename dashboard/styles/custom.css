@@ -1,14 +1,39 @@
 /* VIGIL Professional Healthcare Theme */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, [class*="css"] {
+html, body, [class*="css"], .stApp {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: #263746;
+    color: #15324B !important;
+    background-color: #F4F7FA;
 }
 
-/* App Background */
-.stApp {
-    background-color: #F4F7FA;
+/* Sidebar Customization */
+[data-testid="stSidebar"] {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #DCE2E6 !important;
+}
+
+[data-testid="stSidebar"] * {
+    color: #15324B !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label {
+    color: #15324B !important;
+    font-weight: 600 !important;
+    font-size: 0.92rem !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+    padding: 4px 0 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label p {
+    color: #15324B !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] {
+    gap: 8px !important;
 }
 
 /* Header & Navigation Styling */
@@ -16,7 +41,7 @@ html, body, [class*="css"] {
     background-color: #15324B;
     padding: 16px 24px;
     border-radius: 6px;
-    color: #FFFFFF;
+    color: #FFFFFF !important;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -29,33 +54,19 @@ html, body, [class*="css"] {
     font-size: 1.4rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: #FFFFFF;
+    color: #FFFFFF !important;
 }
 
 .vigil-header p {
     margin: 4px 0 0 0;
     font-size: 0.85rem;
-    color: #A0B4C8;
-}
-
-/* Sidebar Customization */
-[data-testid="stSidebar"] {
-    background-color: #FFFFFF;
-    border-right: 1px solid #DCE2E6;
-}
-
-[data-testid="stSidebar"] h2 {
-    color: #15324B;
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #E5E9EE;
+    color: #DCE6F0 !important;
 }
 
 /* KPI Metric Cards */
 .kpi-card {
-    background-color: #FFFFFF;
-    border: 1px solid #DCE2E6;
+    background-color: #FFFFFF !important;
+    border: 1px solid #DCE2E6 !important;
     border-radius: 6px;
     padding: 18px 20px;
     margin-bottom: 16px;
@@ -64,23 +75,23 @@ html, body, [class*="css"] {
 
 .kpi-title {
     font-size: 0.82rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: #6C7A89;
+    color: #4A5B6D !important;
     margin-bottom: 6px;
 }
 
 .kpi-value {
     font-size: 1.85rem;
     font-weight: 700;
-    color: #15324B;
+    color: #15324B !important;
     line-height: 1.2;
 }
 
 .kpi-subtitle {
     font-size: 0.78rem;
-    color: #8A99A8;
+    color: #6C7A89 !important;
     margin-top: 6px;
 }
 
@@ -96,60 +107,51 @@ html, body, [class*="css"] {
 }
 
 .badge-critical {
-    background-color: #FDE8E8;
-    color: #D9534F;
-    border: 1px solid #F8B4B4;
+    background-color: #FDE8E8 !important;
+    color: #D9534F !important;
+    border: 1px solid #F8B4B4 !important;
 }
 
 .badge-high {
-    background-color: #FEF3C7;
-    color: #D97706;
-    border: 1px solid #FCD34D;
+    background-color: #FEF3C7 !important;
+    color: #D97706 !important;
+    border: 1px solid #FCD34D !important;
 }
 
 .badge-medium {
-    background-color: #FEF9C3;
-    color: #CA8A04;
-    border: 1px solid #FDE047;
+    background-color: #FEF9C3 !important;
+    color: #CA8A04 !important;
+    border: 1px solid #FDE047 !important;
 }
 
 .badge-low {
-    background-color: #E0F2FE;
-    color: #0284C7;
-    border: 1px solid #BAE6FD;
+    background-color: #E0F2FE !important;
+    color: #0284C7 !important;
+    border: 1px solid #BAE6FD !important;
 }
 
 .badge-verified {
-    background-color: #E6F4EA;
-    color: #137333;
-    border: 1px solid #CEEAD6;
+    background-color: #E6F4EA !important;
+    color: #137333 !important;
+    border: 1px solid #CEEAD6 !important;
 }
 
 .badge-pending {
-    background-color: #FFF0D4;
-    color: #B06000;
-    border: 1px solid #FFE0B2;
+    background-color: #FFF0D4 !important;
+    color: #B06000 !important;
+    border: 1px solid #FFE0B2 !important;
 }
 
 .badge-resolved {
-    background-color: #F1F3F4;
-    color: #5F6368;
-    border: 1px solid #DADCE0;
-}
-
-/* Video Container */
-.video-wrapper {
-    background-color: #0F172A;
-    border-radius: 6px;
-    border: 1px solid #1E293B;
-    overflow: hidden;
-    position: relative;
+    background-color: #F1F3F4 !important;
+    color: #5F6368 !important;
+    border: 1px solid #DADCE0 !important;
 }
 
 /* Section Box */
 .section-box {
-    background-color: #FFFFFF;
-    border: 1px solid #DCE2E6;
+    background-color: #FFFFFF !important;
+    border: 1px solid #DCE2E6 !important;
     border-radius: 6px;
     padding: 20px;
     margin-bottom: 20px;
@@ -157,8 +159,8 @@ html, body, [class*="css"] {
 
 .section-title {
     font-size: 1.05rem;
-    font-weight: 600;
-    color: #15324B;
+    font-weight: 700;
+    color: #15324B !important;
     margin-bottom: 16px;
     border-bottom: 1px solid #F0F3F6;
     padding-bottom: 8px;
