@@ -26,37 +26,45 @@ class TestVisionModules(unittest.TestCase):
         self.assertEqual(tracks2[0].track_id, tid, "Track ID must persist across frames")
 
     def test_fall_detector_upright_vs_prone(self):
-        fall_detector = FallDetector(confirmation_frames=3)
+        fall_detector = FallDetector(confirmation_frames=3, floor_level_ratio=0.65)
 
         # 1. Upright person (height > width, torso angle low)
         upright_bbox = [100.0, 100.0, 160.0, 320.0]  # width=60, height=220 (ratio=0.27)
-        res_upright = fall_detector.analyze_pose(upright_bbox, None)
+        res_upright = fall_detector.analyze_pose(upright_bbox, None, frame_h=480)
         self.assertEqual(res_upright["posture"], "Upright")
         self.assertFalse(res_upright["is_candidate"])
 
-        # 2. Prone person (horizontal orientation: width > height)
-        prone_bbox = [100.0, 250.0, 340.0, 320.0]  # width=240, height=70 (ratio=3.42)
-        res_prone = fall_detector.analyze_pose(prone_bbox, None)
-        self.assertEqual(res_prone["posture"], "Horizontal/Prone")
-        self.assertTrue(res_prone["is_candidate"])
+        # 2. Patient sleeping in an elevated bed (y2=220, frame_h=480 -> y_ratio=0.45 < 0.65 floor level)
+        bed_sleeping_bbox = [100.0, 150.0, 340.0, 220.0]  # width=240, height=70
+        res_bed = fall_detector.analyze_pose(bed_sleeping_bbox, None, frame_h=480)
+        self.assertEqual(res_bed["posture"], "Lying in Bed (Resting)")
+        self.assertFalse(res_bed["is_candidate"], "Patient resting on elevated bed must NOT be flagged as fall")
 
-        # 3. Temporal confirmation check
+        # 3. Patient lying in a designated Bed Safe Zone
+        bed_zone = [{"name": "Bed 1", "x1": 0.1, "y1": 0.2, "x2": 0.8, "y2": 0.9}]
+        res_zone = fall_detector.analyze_pose(bed_sleeping_bbox, None, frame_h=480, frame_w=640, bed_zones=bed_zone)
+        self.assertEqual(res_zone["posture"], "Lying in Bed (Resting)")
+        self.assertFalse(res_zone["is_candidate"])
+
+        # 4. True fall on the floor (y2=420, frame_h=480 -> y_ratio=0.875 >= 0.65 floor level)
+        floor_fall_bbox = [100.0, 350.0, 340.0, 420.0]  # width=240, height=70
+        res_floor = fall_detector.analyze_pose(floor_fall_bbox, None, frame_h=480)
+        self.assertEqual(res_floor["posture"], "Horizontal / Floor Fall")
+        self.assertTrue(res_floor["is_candidate"], "Horizontal posture on the floor MUST be flagged as fall candidate")
+
+        # 5. Temporal confirmation check for floor fall
         tracker = MultiObjectTracker()
-        tracks = tracker.update([{"bbox": prone_bbox, "conf": 0.9}])
+        tracks = tracker.update([{"bbox": floor_fall_bbox, "conf": 0.9}])
         target = tracks[0]
 
-        # Process frame 1
-        is_fall, desc = fall_detector.process_track(target)
-        self.assertFalse(is_fall, "Single frame should not trigger immediate fall alert without confirmation")
-
-        # Process frame 2
-        is_fall, desc = fall_detector.process_track(target)
+        # Process frames
+        is_fall, _ = fall_detector.process_track(target, frame_h=480)
         self.assertFalse(is_fall)
-
-        # Process frame 3 (hits confirmation_frames=3)
-        is_fall, desc = fall_detector.process_track(target)
-        self.assertTrue(is_fall, "Should trigger fall alert after temporal persistence frames")
-        self.assertIn("Possible patient fall detected", desc)
+        is_fall, _ = fall_detector.process_track(target, frame_h=480)
+        self.assertFalse(is_fall)
+        is_fall, desc = fall_detector.process_track(target, frame_h=480)
+        self.assertTrue(is_fall, "Should trigger fall alert after temporal persistence frames on the floor")
+        self.assertIn("Possible patient floor fall detected", desc)
 
     def test_unattended_object_detector(self):
         obj_detector = UnattendedObjectDetector(time_threshold_sec=0.1, proximity_radius_px=100.0)

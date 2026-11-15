@@ -9,6 +9,7 @@ import time
 import tempfile
 import streamlit as st
 import numpy as np
+from datetime import datetime
 
 from backend.database import SessionLocal
 from backend.models import Camera
@@ -35,11 +36,12 @@ def render_live_monitoring():
         st.markdown("<div class='section-box'><div class='section-title'>Feed & Channel Control</div>", unsafe_allow_html=True)
         selected_cam_label = st.selectbox("Select Active Camera", list(cam_options.keys()) if cam_options else ["CAM-01 - Ward 4 Corridor"])
         active_cam = cam_options.get(selected_cam_label) if cam_options else None
+        active_cam_id = active_cam.camera_id if active_cam else "CAM-01"
 
         # Source Selection
         source_type = st.radio(
             "Video Stream Source",
-            ["Hospital Demo Feed", "Built-in Webcam (Local)", "Upload Video File"],
+            ["Built-in Webcam (Local)", "Hospital Demo Feed", "Upload Video File"],
             index=0
         )
 
@@ -71,6 +73,9 @@ def render_live_monitoring():
 
         st.markdown("</div>", unsafe_allow_html=True)
 
+    # Initial Active Alert count from database for this camera
+    initial_pending_alerts = len(incident_manager.get_incidents(camera_id=active_cam_id, status="Pending"))
+
     with col_feed:
         # Stream control buttons
         st.markdown("<div class='section-box' style='padding: 14px;'>", unsafe_allow_html=True)
@@ -81,7 +86,7 @@ def render_live_monitoring():
             stop_btn = st.button("⏹ STOP STREAM", use_container_width=True)
         with btn_c3:
             st.markdown(
-                f"<div style='text-align: right; font-size: 0.85rem; color: #6C7A89; padding-top: 8px;'>"
+                f"<div style='text-align: right; font-size: 0.85rem; color: #15324B; padding-top: 8px;'>"
                 f"Location: <b>{active_cam.location if active_cam else 'Ward 4'}</b> &bull; Resolution: <b>640x480</b>"
                 f"</div>",
                 unsafe_allow_html=True
@@ -91,6 +96,7 @@ def render_live_monitoring():
         # Video Frame Container
         frame_placeholder = st.empty()
         status_placeholder = st.empty()
+        alert_ticker_placeholder = st.empty()
 
         # Telemetry metrics cards below video
         m1, m2, m3, m4 = st.columns(4)
@@ -103,8 +109,9 @@ def render_live_monitoring():
         with m4:
             kpi_fps = st.empty()
 
+        # Initial card states
         kpi_occ.markdown("""<div class="kpi-card"><div class="kpi-title">Occupancy</div><div class="kpi-value">0</div><div class="kpi-subtitle">Visible Persons</div></div>""", unsafe_allow_html=True)
-        kpi_alerts.markdown("""<div class="kpi-card"><div class="kpi-title">Active Alerts</div><div class="kpi-value">0</div><div class="kpi-subtitle">Current Frame</div></div>""", unsafe_allow_html=True)
+        kpi_alerts.markdown(f"""<div class="kpi-card" style="border-left: 4px solid {'#D9534F' if initial_pending_alerts > 0 else '#398568'};"><div class="kpi-title">Active Alerts</div><div class="kpi-value">{initial_pending_alerts}</div><div class="kpi-subtitle">Pending in Database</div></div>""", unsafe_allow_html=True)
         kpi_objects.markdown("""<div class="kpi-card"><div class="kpi-title">Tracked Items</div><div class="kpi-value">0</div><div class="kpi-subtitle">Bags / Objects</div></div>""", unsafe_allow_html=True)
         kpi_fps.markdown("""<div class="kpi-card"><div class="kpi-title">Inference Rate</div><div class="kpi-value">--</div><div class="kpi-subtitle">Frames Per Sec</div></div>""", unsafe_allow_html=True)
 
@@ -119,20 +126,19 @@ def render_live_monitoring():
 
     # Video Processing Loop
     if st.session_state.is_streaming:
-        # Resolve Video Source
         cap = None
-        if source_type == "Hospital Demo Feed":
+        if source_type == "Built-in Webcam (Local)":
+            cap = cv2.VideoCapture(0)
+            if not cap.isOpened():
+                st.error("Cannot access built-in webcam. Please verify macOS camera permissions in System Settings -> Privacy & Security -> Camera.")
+                st.session_state.is_streaming = False
+                return
+        elif source_type == "Hospital Demo Feed":
             demo_path = os.path.join("data", "videos", "demo_hospital_corridor.mp4")
             if not os.path.exists(demo_path):
                 from scripts.generate_demo_footage import generate_hospital_corridor_video
                 generate_hospital_corridor_video(demo_path)
             cap = cv2.VideoCapture(demo_path)
-        elif source_type == "Built-in Webcam (Local)":
-            cap = cv2.VideoCapture(0)
-            if not cap.isOpened():
-                st.error("Cannot access built-in webcam. Please verify macOS camera permissions, or switch to 'Hospital Demo Feed'.")
-                st.session_state.is_streaming = False
-                return
         elif source_type == "Upload Video File":
             if uploaded_video_path and os.path.exists(uploaded_video_path):
                 cap = cv2.VideoCapture(uploaded_video_path)
@@ -147,18 +153,19 @@ def render_live_monitoring():
             "name": active_cam.name if active_cam else "Ward 4 Corridor",
             "crowd_threshold": crowd_thresh,
             "restricted_zones": active_cam.restricted_zones if active_cam else [],
+            "bed_zones": getattr(active_cam, "bed_zones", []),
             "enabled_modules": enabled_mods
         })
 
         frame_count = 0
-        t_start = time.time()
+        current_pending_alerts = initial_pending_alerts
+        recent_alert_messages = []
 
         status_placeholder.info("Surveillance feed initialized. Analyzing frames with YOLO...")
 
         while st.session_state.is_streaming and cap and cap.isOpened():
             ret, frame = cap.read()
             if not ret:
-                # Loop video if demo feed
                 if source_type == "Hospital Demo Feed":
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                     continue
@@ -174,21 +181,41 @@ def render_live_monitoring():
             t_elapsed = time.time() - t_frame_start
             fps = 1.0 / max(0.001, t_elapsed)
 
+            # If alerts were triggered in this frame, update total count & ticker
+            if alerts:
+                current_pending_alerts += len(alerts)
+                now_str = datetime.now().strftime("%H:%M:%S")
+                for a in alerts:
+                    recent_alert_messages.insert(0, f"[{now_str}] {a}")
+                if len(recent_alert_messages) > 3:
+                    recent_alert_messages = recent_alert_messages[:3]
+
+            # Render Alert Ticker Banner if there are active recent alerts
+            if recent_alert_messages:
+                ticker_items = "".join([f"<li style='margin-bottom: 2px;'>{msg}</li>" for msg in recent_alert_messages])
+                alert_ticker_placeholder.markdown(
+                    f"""
+                    <div style="background: #FDE8E8; border: 1px solid #F8B4B4; border-left: 5px solid #D9534F; padding: 10px 14px; border-radius: 4px; margin-bottom: 12px; color: #9B1C1C; font-size: 0.85rem;">
+                        <b style="font-size: 0.9rem;">🚨 ACTIVE INCIDENT TICKER:</b>
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">{ticker_items}</ul>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
             # Convert BGR to RGB for Streamlit display
             rgb_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
             frame_placeholder.image(rgb_frame, channels="RGB", use_container_width=True)
 
             # Update Telemetry KPIs
             occ_count = metrics.get("people_count", 0)
-            alert_count = len(alerts)
             obj_count = metrics.get("objects_tracked", 0)
 
             kpi_occ.markdown(f"""<div class="kpi-card" style="border-left: 4px solid {'#E6A23C' if occ_count >= crowd_thresh else '#2878B5'};"><div class="kpi-title">Occupancy</div><div class="kpi-value">{occ_count}/{crowd_thresh}</div><div class="kpi-subtitle">Visible Persons</div></div>""", unsafe_allow_html=True)
-            kpi_alerts.markdown(f"""<div class="kpi-card" style="border-left: 4px solid {'#D9534F' if alert_count > 0 else '#398568'};"><div class="kpi-title">Active Alerts</div><div class="kpi-value">{alert_count}</div><div class="kpi-subtitle">Current Frame</div></div>""", unsafe_allow_html=True)
+            kpi_alerts.markdown(f"""<div class="kpi-card" style="border-left: 4px solid {'#D9534F' if current_pending_alerts > 0 else '#398568'};"><div class="kpi-title">Active Alerts</div><div class="kpi-value">{current_pending_alerts}</div><div class="kpi-subtitle">Pending in Database</div></div>""", unsafe_allow_html=True)
             kpi_objects.markdown(f"""<div class="kpi-card"><div class="kpi-title">Tracked Items</div><div class="kpi-value">{obj_count}</div><div class="kpi-subtitle">Bags / Objects</div></div>""", unsafe_allow_html=True)
             kpi_fps.markdown(f"""<div class="kpi-card"><div class="kpi-title">Inference Rate</div><div class="kpi-value">{fps:.1f}</div><div class="kpi-subtitle">Frames Per Sec</div></div>""", unsafe_allow_html=True)
 
-            # Restraint on frame delay for smooth demo rendering
             time.sleep(0.03)
 
         if cap:

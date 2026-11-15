@@ -45,6 +45,7 @@ class VisionPipeline:
         self.camera_name = "Ward 4 Corridor"
         self.crowd_threshold = 4
         self.restricted_zones = []
+        self.bed_zones = []
         self.enabled_modules = [
             "human_tracking",
             "fall_detection",
@@ -63,6 +64,7 @@ class VisionPipeline:
         self.crowd_threshold = camera_config.get("crowd_threshold", self.crowd_threshold)
         self.crowd_monitor.update_threshold(self.crowd_threshold)
         self.restricted_zones = camera_config.get("restricted_zones", [])
+        self.bed_zones = camera_config.get("bed_zones", [])
         self.enabled_modules = camera_config.get("enabled_modules", self.enabled_modules)
 
     def process_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any], List[str]]:
@@ -104,10 +106,12 @@ class VisionPipeline:
                     cooldown_key=f"crowd_{self.camera_id}"
                 )
 
-        # 4. Fall Detection (Module 2)
+        # 4. Fall Detection (Module 2) - With Bed Exclusion & Floor Level Ground Check
         if "fall_detection" in self.enabled_modules:
             for track in active_tracks:
-                is_fall, fall_desc = self.fall_detector.process_track(track)
+                is_fall, fall_desc = self.fall_detector.process_track(
+                    track, frame_h=h, frame_w=w, bed_zones=self.bed_zones
+                )
                 if is_fall and fall_desc:
                     active_alerts.append(fall_desc)
                     incident_manager.create_incident(
@@ -196,13 +200,16 @@ class VisionPipeline:
         """Renders bounding boxes, skeletal joints, track ID badges, and posture states."""
         for t in tracks:
             x1, y1, x2, y2 = [int(v) for v in t.bbox]
-            is_fall = getattr(t, "is_fallen", False) or t.posture == "Horizontal/Prone"
+            is_fall = getattr(t, "is_fallen", False) or t.posture == "Horizontal / Floor Fall"
 
             # Colors (BGR)
-            # Healthcare blue: (181, 120, 40), Critical Red: (79, 83, 217), Warning Amber: (60, 162, 230)
+            # Healthcare blue: (181, 120, 40), Critical Red: (79, 83, 217), Warning Amber: (60, 162, 230), Safe Green: (104, 133, 57)
             if is_fall:
                 box_color = (79, 83, 217)  # Critical Red
-                badge_text = f"ID #{t.track_id} | FALL DETECTED"
+                badge_text = f"ID #{t.track_id} | FALL DETECTED (FLOOR)"
+            elif t.posture == "Lying in Bed (Resting)":
+                box_color = (104, 133, 57)  # Safe Green / Resting
+                badge_text = f"ID #{t.track_id} | IN BED (RESTING)"
             elif t.posture in ("Sitting", "Bending"):
                 box_color = (60, 162, 230)  # Amber
                 badge_text = f"ID #{t.track_id} | {t.posture.upper()}"
