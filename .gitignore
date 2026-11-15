@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Data & Evidence (Excluding runtime generated snapshots and database from git)
+data/snapshots/*.jpg
+data/snapshots/*.png
+*.db
+*.sqlite3
+
+# YOLO Model Weights (can be downloaded via script/settings)
+*.pt
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs & Temporary files
+*.log
+/tmp/
+.matplotlib/

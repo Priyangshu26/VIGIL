@@ -1,0 +1,165 @@
+/* VIGIL Professional Healthcare Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #263746;
+}
+
+/* App Background */
+.stApp {
+    background-color: #F4F7FA;
+}
+
+/* Header & Navigation Styling */
+.vigil-header {
+    background-color: #15324B;
+    padding: 16px 24px;
+    border-radius: 6px;
+    color: #FFFFFF;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border-left: 4px solid #2878B5;
+}
+
+.vigil-header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #FFFFFF;
+}
+
+.vigil-header p {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: #A0B4C8;
+}
+
+/* Sidebar Customization */
+[data-testid="stSidebar"] {
+    background-color: #FFFFFF;
+    border-right: 1px solid #DCE2E6;
+}
+
+[data-testid="stSidebar"] h2 {
+    color: #15324B;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E5E9EE;
+}
+
+/* KPI Metric Cards */
+.kpi-card {
+    background-color: #FFFFFF;
+    border: 1px solid #DCE2E6;
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(21, 50, 75, 0.04);
+}
+
+.kpi-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #6C7A89;
+    margin-bottom: 6px;
+}
+
+.kpi-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #15324B;
+    line-height: 1.2;
+}
+
+.kpi-subtitle {
+    font-size: 0.78rem;
+    color: #8A99A8;
+    margin-top: 6px;
+}
+
+/* Severity Badges */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.badge-critical {
+    background-color: #FDE8E8;
+    color: #D9534F;
+    border: 1px solid #F8B4B4;
+}
+
+.badge-high {
+    background-color: #FEF3C7;
+    color: #D97706;
+    border: 1px solid #FCD34D;
+}
+
+.badge-medium {
+    background-color: #FEF9C3;
+    color: #CA8A04;
+    border: 1px solid #FDE047;
+}
+
+.badge-low {
+    background-color: #E0F2FE;
+    color: #0284C7;
+    border: 1px solid #BAE6FD;
+}
+
+.badge-verified {
+    background-color: #E6F4EA;
+    color: #137333;
+    border: 1px solid #CEEAD6;
+}
+
+.badge-pending {
+    background-color: #FFF0D4;
+    color: #B06000;
+    border: 1px solid #FFE0B2;
+}
+
+.badge-resolved {
+    background-color: #F1F3F4;
+    color: #5F6368;
+    border: 1px solid #DADCE0;
+}
+
+/* Video Container */
+.video-wrapper {
+    background-color: #0F172A;
+    border-radius: 6px;
+    border: 1px solid #1E293B;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Section Box */
+.section-box {
+    background-color: #FFFFFF;
+    border: 1px solid #DCE2E6;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #15324B;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #F0F3F6;
+    padding-bottom: 8px;
+}
